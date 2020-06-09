@@ -18,6 +18,10 @@ class Hangman
     @player_guess = gets.chomp.upcase
   end
 
+  def correct_guess? ()
+     @word.include?(@player_guess)
+  end
+
 
 
 end
@@ -26,4 +30,6 @@ test = Hangman.new()
 puts test.word
 puts test.display
 test.ask_player_for_guess
+
 puts "Your guess: #{test.player_guess}"
+puts "Was your guess correct? #{test.correct_guess?()}"
