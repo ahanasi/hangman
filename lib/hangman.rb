@@ -35,10 +35,32 @@ class Hangman
     self.new(data[:player_guess], data[:word], data[:display], data[:guesses_left], data[:misses])
   end
 
-  def ask_player_for_guess()
-    #Ask player for guess
+  def display_tries_and_misses()
+    puts "\nTries left: #{@guesses_left}"
+    puts "Misses: #{@misses.join(", ")}"
+  end
+
+  def guess_or_save()
+
+    #Ask player for guess, save or exit
     puts "\nGuess a letter in the secret word!\n"
-    @player_guess = gets.chomp.upcase
+
+    while @player_guess = gets.chomp.upcase # loop while getting user input
+      case @player_guess
+      when "SAVE"
+        puts "Your game has been saved!"
+        @player_guess = ""
+        create_user_yml(self)
+        exit
+      when "EXIT"
+        exit
+      when /^[A-Z]$/
+        break
+      else
+        puts "Please enter a valid input"
+        print "> " # print the prompt, so the user knows to re-enter input
+      end
+    end
   end
 
   def correct_guess?()
@@ -60,30 +82,32 @@ class Hangman
   end
 
   def play_round()
-    #Ask player if they would like to make a guess or save their game
-
-    ask_player_for_guess()
-    puts "\nYour guess: #{@player_guess}"
+    display_tries_and_misses()
+    guess_or_save()
     if correct_guess?() && @display.split(" ").include?(@player_guess)
-      puts "Uh-oh! You lose a try for repeating a previous guess."
       @guesses_left -= 1
     elsif correct_guess?()
       update_display()
     else
-      puts "Wrong guess!"
       @misses.push(@player_guess)
       @misses = @misses.uniq
       @guesses_left -= 1
     end
+  end
 
-    puts "Tries left: #{@guesses_left}"
-    puts "Misses: #{@misses.join(", ")}"
+  def create_user_yml(obj)
+    Dir.mkdir("saves") unless Dir.exist?("saves")
+    File.open("saves/saved_game.yml", "w+") { |file| file.write(obj.to_yaml) }
   end
 end
 
 test = Hangman.new()
 
 until test.victory? || (test.guesses_left == 0)
+  puts `clear`
+  puts "Type in: 'Save' -  Save and exit
+         'Load' -  Load a previously saved game
+         'Exit' -  Exit the current game\n\n"
   puts test.display
   test.play_round
 end
