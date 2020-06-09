@@ -2,16 +2,37 @@ require_relative "player.rb"
 require_relative "display.rb"
 require_relative "secret_word.rb"
 require "pry"
+require "yaml"
 
 class Hangman
-  attr_reader :word, :guesses_left, :player_guess, :word, :display, :misses
+  attr_reader :word, :guesses_left, :player_guess, :display, :misses
 
-  def initialize()
-    @player_guess = Player.new().guess
-    @word = SecretWord.new().word
-    @display = Display.new().blank_slate(@word)
-    @guesses_left = 6
-    @misses = []
+  def initialize(player_guess = Player.new().guess,
+                 word = SecretWord.new().word,
+                 display = Display.new().blank_slate(word),
+                 guesses_left = 6,
+                 misses = [])
+    @player_guess = player_guess
+    @word = word
+    @display = display
+    @guesses_left = guesses_left
+    @misses = misses
+  end
+
+  def to_yaml
+    YAML.dump ({
+      :word => @word,
+      :guesses_left => @guesses_left,
+      :player_guess => @player_guess,
+      :display => @display,
+      :misses => @misses,
+    })
+  end
+
+  def self.from_yaml(string)
+    data = YAML.load string
+    p data
+    self.new(data[:player_guess], data[:word], data[:display], data[:guesses_left], data[:misses])
   end
 
   def ask_player_for_guess()
@@ -39,6 +60,8 @@ class Hangman
   end
 
   def play_round()
+    #Ask player if they would like to make a guess or save their game
+
     ask_player_for_guess()
     puts "\nYour guess: #{@player_guess}"
     if correct_guess?() && @display.split(" ").include?(@player_guess)
