@@ -5,7 +5,7 @@ require "pry"
 require "yaml"
 
 class Hangman
-  attr_reader :word, :guesses_left, :player_guess, :display, :misses
+  attr_accessor :word, :guesses_left, :player_guess, :display, :misses
 
   def initialize(player_guess = Player.new().guess,
                  word = SecretWord.new().word,
@@ -29,15 +29,26 @@ class Hangman
     })
   end
 
-  def self.from_yaml(string)
-    data = YAML.load string
-    p data
-    self.new(data[:player_guess], data[:word], data[:display], data[:guesses_left], data[:misses])
+  def from_yaml(string)
+    data = YAML.load(string)
+    @player_guess = data[:player_guess]
+    @word = data[:word]
+    @display = data[:display]
+    @guesses_left = data[:guesses_left]
+    @misses = data[:misses]
   end
 
   def display_tries_and_misses()
     puts "\nTries left: #{@guesses_left}"
     puts "Misses: #{@misses.join(", ")}"
+  end
+
+  def reload_display()
+    puts `clear`
+    puts "Type in: 'Save' -  Save and exit
+         'Load' -  Load a previously saved game
+         'Exit' -  Exit the current game\n\n"
+    puts @display
   end
 
   def guess_or_save()
@@ -54,6 +65,10 @@ class Hangman
         exit
       when "EXIT"
         exit
+      when "LOAD"
+        Hangman.new(from_yaml(File.read("saves/saved_game.yml")))
+        reload_display
+        break
       when /^[A-Z]$/
         break
       else
@@ -99,21 +114,21 @@ class Hangman
     Dir.mkdir("saves") unless Dir.exist?("saves")
     File.open("saves/saved_game.yml", "w+") { |file| file.write(obj.to_yaml) }
   end
+
+  def play_game()
+    until victory? || (@guesses_left == 0)
+      reload_display()
+      play_round()
+    end
+    reload_display
+    if victory?
+      puts "\nYou won!"
+    else
+      puts "You lost!\nThe secret word was #{@word}"
+    end
+  end
 end
 
-test = Hangman.new()
+puts "Welcome to Hangman! Press 'S' to start a new game. Press enter to exit."
+gets.chomp.upcase == "S" ? Hangman.new().play_game() : exit
 
-until test.victory? || (test.guesses_left == 0)
-  puts `clear`
-  puts "Type in: 'Save' -  Save and exit
-         'Load' -  Load a previously saved game
-         'Exit' -  Exit the current game\n\n"
-  puts test.display
-  test.play_round
-end
-
-if test.victory?
-  puts "#{test.display}\nYou won!"
-else
-  puts "You lost!\nThe secret word was #{test.word}"
-end
