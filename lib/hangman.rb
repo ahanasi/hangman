@@ -129,6 +129,7 @@ class Hangman
   end
 end
 
+puts`clear`
 puts "Welcome to Hangman! Press 'S' to start a new game. Press enter to exit."
 gets.chomp.upcase == "S" ? Hangman.new().play_game() : exit
 
